@@ -17,7 +17,7 @@ module.exports = class Webserver {
     }
 
 
-    start() {
+    start(api) {
         if (this._application) {
             throw Error('WEBSERVER: already initialised.');
         }
