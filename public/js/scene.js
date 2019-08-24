@@ -1,11 +1,39 @@
 'use strict';
 
 
+function bindKeys(scene, camera) {
+    const actionManager = scene.actionManager;
+    const map = {};
+    const setKeys = evt => map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+
+    actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, setKeys));
+    actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, setKeys));
+
+    scene.registerAfterRender(() => {
+        if ((map["a"] || map["A"])) {
+            camera.position.x -= 0.4;
+        }
+
+        if ((map["w"] || map["W"])) {
+            camera.position.z += 0.4;
+        };
+
+        if ((map["d"] || map["D"])) {
+            camera.position.x += 0.4;
+        };
+
+        if ((map["s"] || map["S"])) {
+            camera.position.z -= 0.4;
+        };
+    });
+}
+
+
 function loadMaterials(materials, scene) {
     const promises = [];
 
     for (const material in materials) {
-        console.log(`Queuing material: ${material} from ${materials[material]}`);
+        console.log(`Loading material: ${material} from ${materials[material]}`);
 
         const build = new BABYLON.StandardMaterial(material, scene);
         
@@ -87,7 +115,7 @@ function loadSounds(sounds, scene) {
     const promises = [];
 
     for (const sound in sounds) {
-        console.log(`Queuing sound: ${sound} from ${sounds[sound]}`);
+        console.log(`Loading sound: ${sound} from ${sounds[sound]}`);
 
         promises.push(new Promise(resolve =>
              sounds[sound] = new BABYLON.Sound(sound, sounds[sound], scene, () => {
@@ -104,10 +132,13 @@ export default class Scene {
     constructor(engine, canvas, cameraPosition) {
         this._canvas = canvas;
         this._scene = new BABYLON.Scene(engine);
+        this._scene.actionManager = new BABYLON.ActionManager(this._scene);
 
         this._camera = new BABYLON.UniversalCamera("UniversalCamera", cameraPosition || new BABYLON.Vector3(0, 0, -10), this._scene);
         this._camera.setTarget(BABYLON.Vector3.Zero());
         this._camera.attachControl(canvas, true);
+
+        bindKeys(this._scene, this._camera);
     }
 
 
@@ -124,7 +155,6 @@ export default class Scene {
         loadPresets(zone.presets, scene);
    
         new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
-        var light = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);                 
     }
 
 

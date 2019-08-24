@@ -1,0 +1,19 @@
+newmtl shapes
+
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+illum 2
+map_Ka demo.jpg
+map_Kd demo.jpg
+
+newmtl cobbles
+
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+illum 2
+map_Ka stone.jpg
+map_Kd stone.jpg
