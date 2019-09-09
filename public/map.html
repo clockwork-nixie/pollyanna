@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <title>Map</title>
+
+    <meta name="author" content="ClockworkNixie">
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto" type="text/css">
+    <link rel="stylesheet" href="css/map.css" type="text/css">
+  </head>
+
+  <body>
+    <canvas id="renderCanvas"></canvas>
+    
+    <script type="text/javascript">
+      (function (document) {
+        const canvas = document.getElementById('renderCanvas');
+
+        const clumpHeightMap = function (heightMap) {
+          if (heightMap && heightMap.length && heightMap[0]) {
+            const height = heightMap.length;
+            const width = heightMap[0].length;
+
+            for (let y = 0; y < height; ++y) {
+              const row = heightMap[y];
+
+              for (let x = 0; x < width; ++x) {
+                let sum = 0;
+                let count = 0;
+
+                for (let dy = -1; dy <= 1; ++dy) {
+                  for (let dx = -1; dx <= 1; ++dx) {
+                    if ((dx || dy) &&
+                        (y + dy) >= 0 && (y + dy) < height &&
+                        (x + dx) >= 0 && (x + dx) < width) {
+                      sum += heightMap[y + dy][x + dx];
+                      ++count;
+                    }
+                  }
+                }
+
+                if (count) {
+                  heightMap[y][x] -= ((sum / count) - heightMap[y][x]) / 4;
+                }
+              }
+            }
+          }
+        };
+
+
+        const generateHeightMap = function (canvas) {
+          const width = canvas.width;
+          const height = canvas.height;
+          const rows = new Array(height);
+
+          for (let y = 0; y < height; ++y) {
+            const row = new Array(width);
+
+            for (let x = 0; x < width; ++x) {
+              row[x] = Math.random();
+            }
+            rows[y] = row;
+          }
+          return rows;
+        };
+
+        const renderHeightMap = function (heightMap, canvas) {
+          const ctx = canvas.getContext('2d');
+          const width = canvas.width;
+          const height = canvas.height;
+          const image = ctx.getImageData(0, 0, width, height);
+          const pixels = image.data;
+
+          ctx.clearRect(0, 0, width, height);
+
+          if (heightMap && heightMap.length && heightMap[0] && heightMap.length === height && heightMap[0].length === width) {
+            const pitch = 4;
+
+            const colourMap = [
+              { value: 0.1, red:   0, green: 0,   blue: 255 },
+              { value: 0.2, red:   0, green: 128, blue: 255 },
+              { value: 0.3, red:   0, green: 255, blue: 255 },
+              { value: 0.4, red:   0, green: 255, blue: 128 },
+              { value: 0.5, red:   0, green: 255, blue:   0 },
+              { value: 0.6, red: 128, green: 255, blue:   0 },
+              { value: 0.7, red: 255, green: 128, blue:   0 },
+              { value: 0.8, red: 255, green: 64,  blue:  64 },
+              { value: 0.9, red: 255, green: 128, blue: 128 },
+              { value: 1.0, red: 255, green: 255, blue: 255 }
+            ];
+
+            for (let y = 0; y < height; ++y) {
+              for (let x = 0; x < width; ++x) {
+                const value = heightMap[y][x];
+                const index = (y * image.width + x) * pitch;
+                let colour = colourMap[colourMap.length -1];
+                
+                for (let i = 0; i < colourMap.length; ++i) {
+                  if (value <= colourMap[i].value) {
+                    pixels[index] = colourMap[i].red;
+                    pixels[index + 1] = colourMap[i].green;
+                    pixels[index + 2] = colourMap[i].blue;
+                    pixels[index + 3] = 255; // Full opacity
+                    break;
+                  }
+                }
+              }
+            }
+          }
+          ctx.putImageData(image, 0, 0);
+        };
+
+
+        function setupCanvas(canvas) {
+           var dpr = window.devicePixelRatio || 1;
+           var rect = canvas.getBoundingClientRect();
+ 
+          canvas.width = rect.width * dpr;
+          canvas.height = rect.height * dpr;
+ 
+          var ctx = canvas.getContext('2d');
+
+          ctx.scale(dpr, dpr);
+
+          return ctx;
+        }
+
+        setupCanvas(canvas);
+        
+        const heightMap = generateHeightMap(canvas);
+
+        clumpHeightMap(heightMap);
+        renderHeightMap(heightMap, canvas);
+      })(window.document);
+    </script>
+  </body>
+</html>
